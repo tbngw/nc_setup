@@ -1,0 +1,173 @@
+-	Spek Ubuntu 20.04
+o	50 GB
+o	100 GB
+-	Nextcloud 23.02
+
+1. Install LAMP
+sudo apt-fast install apache2 mysql-server -y
+sudo mysql_secure_installation
+sudo systemctl start apache2
+sudo systemctl enable apache2
+sudo systemctl start mysql
+sudo systemctl enable mysql
+sudo apt-fast install php zip libapache2-mod-php php-gd php-json php-mysql php-curl php-mbstring php-intl php-imagick php-xml php-zip php-mysql php-bcmath php-gmp zip unzip -y
+
+2. Create Nextcloud DB (MySQL)
+sudo mysql -u root -p
+CREATE DATABASE nextcloud;
+CREATE USER 'nextcloud'@'localhost' IDENTIFIED BY 'PASSWORD';
+GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextcloud'@'localhost';
+GRANT ALL PRIVILEGES ON nextcloud.* TO 'root'@'localhost';
+FLUSH PRIVILEGES;
+exit
+
+3. Install Nextcloud
+DEFAULT DATA DIRECTORY : /var/www/html/nextcloud/data
+wget -c https://download.nextcloud.com/server/releases/nextcloud-23.0.2.zip
+sudo unzip nextcloud-23.0.2.zip
+sudo mv nextcloud /var/www/html/
+sudo chown -R www-data:www-data /var/www/html/nextcloud
+sudo systemctl restart apache2
+sudo nano /etc/apache2/sites-available/nextcloud.conf
+
+#Alias / "/var/www/html/nextcloud/"
+<Directory /var/www/html/nextcloud/>
+  Require all granted
+  AllowOverride All
+  Options FollowSymLinks MultiViews
+  <IfModule mod_dav.c>
+    Dav off
+  </IfModule>
+</Directory>
+SAVE
+sudo a2ensite nextcloud  ENABLE NEXTCLOUD.CONF configuration
+sudo systemctl restart apache2
+
+4. Install APCu and Redis
+sudo apt-fast install php-apcu redis-server php-redis php-zip php-dompdf php-xml php-mbstring php-gd php-curl unzip \
+php-intl php-bcmath php-gmp php-imagick libmagickcore-6.q16-6-extra -y
+sudo a2enmod rewrite headers env dir mime
+sudo sed -i '/^memory_limit =/s/=.*/= 1024M/' /etc/php/7.4/apache2/php.ini
+sudo systemctl restart apache2
+
+5. Redis cache caching config
+sudo nano /etc/redis
+port 6379  port 0
+unixsocket /var/run/redis/redis.sock
+unixsocketperm 770
+SAVE
+sudo usermod -a -G redis www-data
+sudo systemctl restart apache2
+sudo service redis-server start
+
+6. Remap data folder to a dedicated partition
+sudo df -h
+sudo blkid /dev/sdb1
+sudo nano /etc/fstab
+	UUID="8563319b-24ba-4539-ab08-d7b231dfc07d" /var/www/html/nextcloud/data ext4 defaults 0 0
+sudo cp -rT /var/www/html/nextcloud/data /data
+sudo chown -R www-data:www-data /data
+sudo chown -R www-data:www-data /var/www/html/nextcloud/data 
+sudo reboot
+sudo df -h
+"/dev/sdb1        98G  535M   93G   1% /var/www/html/nextcloud/data"
+sudo a2enmod rewrite headers env dir mime
+sudo systemctl restart apache2
+
+7. Finalize Nextcloud
+http://192.168.153.130
+
+sudo nano /var/www/html/nextcloud/config/config.php
+ADD THE FOLLOWING:
+'memcache.local' => '\\OC\\Memcache\\Redis',
+'memcache.locking' => '\\OC\\Memcache\\Redis',
+'filelocking.enabled' => 'true',
+'redis' => 
+array (
+'host' => '/var/run/redis/redis.sock',
+'port' => 0,
+'timeout' => 0.0,
+),
+SAVE
+sudo reboot
+sudo systemctl enable redis-server
+
+FINE TUNING NEXTCLOUD
+sudo nano /etc/php/7.3/apache2/php.ini
+opcache.enable=1
+opcache.enable_cli=1
+opcache.interned_strings_buffer=8
+opcache.max_accelerated_files=10000
+opcache.memory_consumption=128
+opcache.save_comments=1
+opcache.revalidate_freq=1
+
+ 
+FINE TUNING UBUNTU
+sudo nano /etc/sysctl.conf AND paste the following, SAVE AND RESTART.
+vm.nr_hugepages = 2048
+vm.swappiness = 10
+vm.vfs_cache_pressure = 50
+vm.overcommit_memory = 1
+vm.overcommit_ratio = 70
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 5
+vm.compaction_proactiveness=0
+
+net.core.rmem_max = 12582912
+net.core.wmem_max = 12582912
+net.core.netdev_max_backlog = 9000
+net.core.somaxconn = 512
+net.ipv4.tcp_timestamps = 0
+net.ipv4.tcp_sack = 0
+net.ipv4.tcp_dsack = 0
+net.ipv4.tcp_fack = 0
+sysctl -w net.ipv4.tcp_rmem = 4096 87380 9437184
+sysctl -w net.ipv4.tcp_wmem = 4096 87380 9437184
+net.ipv4.ipfrag_low_thresh = 393216
+net.ipv4.ipfrag_high_thresh = 544288
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_synack_retries = 3
+net.ipv4.tcp_retries2 = 6
+net.ipv4.tcp_keepalive_time = 1000
+net.ipv4.tcp_keepalive_probes = 4
+net.ipv4.tcp_keepalive_intvl = 20
+net.ipv4.tcp_tw_recycle = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 30
+net.ipv4.tcp_mtu_probing = 1
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+
+kernel.sem = 250 32000 100 128
+kernel.shmall = 2097152
+kernel.shmmax = 2147483648
+kernel.shmmni = 4096
+
+fs.inotify.max_user_watches = 524288
+fs.file-max = 1000000
+
+
+APT-FAST
+sudo /bin/bash -c "$(curl -sL https://git.io/vokNn)"
+sudo nano /etc/apt-fast.conf
+_MAXNUM=16
+_MAXCONPERSRV=16
+_SPLITCON=8
+_MINSPLITSZ="1M"
+# Default colors are:
+cGreen='\e[0;32m'
+cRed='\e[0;31m'
+cBlue='\e[0;34m'
+endColor='\e[0m'
+sudo apt-fast update
+sudo apt-fast dist-upgrade
+
+
+
+
+
+
+
+
+
