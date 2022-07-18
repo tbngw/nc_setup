@@ -12,7 +12,7 @@ sudo systemctl start mysql
 sudo systemctl enable mysql
 sudo apt-fast install php zip libapache2-mod-php php-gd php-json php-mysql php-curl php-mbstring php-intl php-imagick php-xml php-zip php-mysql php-bcmath php-gmp zip unzip -y
 
-2. Create Nextcloud DB (MySQL)
+2. Create Nextcloud DB (Mariadb)
 sudo mysql -u root -p
 CREATE DATABASE nextcloud;
 CREATE USER 'nextcloud'@'localhost' IDENTIFIED BY 'PASSWORD';
@@ -21,10 +21,10 @@ GRANT ALL PRIVILEGES ON nextcloud.* TO 'root'@'localhost';
 FLUSH PRIVILEGES;
 exit
 
-3. Install Nextcloud
+3. Install Nextcloud 24.0.3
 DEFAULT DATA DIRECTORY : /var/www/html/nextcloud/data
-wget -c https://download.nextcloud.com/server/releases/nextcloud-23.0.2.zip
-sudo unzip nextcloud-23.0.2.zip
+wget -c https://download.nextcloud.com/server/releases/nextcloud-24.0.3.zip
+sudo unzip nextcloud-24.0.3.zip
 sudo mv nextcloud /var/www/html/
 sudo chown -R www-data:www-data /var/www/html/nextcloud
 sudo systemctl restart apache2
