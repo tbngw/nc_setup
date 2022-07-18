@@ -4,7 +4,7 @@ o	100 GB
 -	Nextcloud 23.02
 
 1. Install LAMP
-sudo apt-fast install apache2 mysql-server -y
+sudo apt-fast install apache2 mariadb-server -y
 sudo mysql_secure_installation
 sudo systemctl start apache2
 sudo systemctl enable apache2
