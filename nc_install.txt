@@ -40,7 +40,7 @@ sudo nano /etc/apache2/sites-available/nextcloud.conf
   </IfModule>
 </Directory>
 SAVE
-sudo a2ensite nextcloud  ENABLE NEXTCLOUD.CONF configuration
+sudo a2ensite nextcloud <!--ENABLE NEXTCLOUD.CONF configuration -->
 sudo systemctl restart apache2
 
 4. Install APCu and Redis
@@ -52,7 +52,7 @@ sudo systemctl restart apache2
 
 5. Redis cache caching config
 sudo nano /etc/redis
-port 6379  port 0
+port 6379 = port 0
 unixsocket /var/run/redis/redis.sock
 unixsocketperm 770
 SAVE
