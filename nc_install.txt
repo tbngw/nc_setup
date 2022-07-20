@@ -51,11 +51,6 @@ sudo sed -i '/^memory_limit =/s/=.*/= 1024M/' /etc/php/7.4/apache2/php.ini
 sudo systemctl restart apache2
 
 5. Redis cache caching config
-sudo nano /etc/redis
-port 6379 = port 0
-unixsocket /var/run/redis/redis.sock
-unixsocketperm 770
-SAVE
 sudo usermod -a -G redis www-data
 sudo systemctl restart apache2
 sudo service redis-server start
@@ -79,15 +74,16 @@ http://192.168.153.130
 
 sudo nano /var/www/html/nextcloud/config/config.php
 ADD THE FOLLOWING:
-'memcache.local' => '\\OC\\Memcache\\Redis',
-'memcache.locking' => '\\OC\\Memcache\\Redis',
-'filelocking.enabled' => 'true',
-'redis' => 
-array (
-'host' => '/var/run/redis/redis.sock',
-'port' => 0,
-'timeout' => 0.0,
-),
+  'memcache.distributed' => '\\OC\\Memcache\\Redis',
+  'memcache.local' => '\\OC\\Memcache\\Redis',
+  'memcache.locking' => '\\OC\\Memcache\\Redis',
+  'filelocking.enabled' => 'true',
+  'redis' => 
+  array (
+    'host' => 'localhost',
+    'port' => 6379,
+    'timeout' => 0.0,
+  ),
 SAVE
 sudo reboot
 sudo systemctl enable redis-server
