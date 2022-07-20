@@ -39,6 +39,11 @@ sudo nano /etc/apache2/sites-available/nextcloud.conf
     Dav off
   </IfModule>
 </Directory>
+
+<Directory /var/www/html>
+    Options -Indexes
+</Directory>
+
 SAVE
 sudo a2ensite nextcloud <!--ENABLE NEXTCLOUD.CONF configuration -->
 sudo systemctl restart apache2
