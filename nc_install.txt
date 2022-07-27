@@ -120,15 +120,23 @@ sudo chown -R www-data:www-data /var/www/html/nextcloud
 sudo systemctl restart apache2
 sudo nano /etc/apache2/sites-available/nextcloud.conf
 
-#Alias / "/var/www/html/nextcloud/"
-<Directory /var/www/html/nextcloud/>
-  Require all granted
-  AllowOverride All
-  Options FollowSymLinks MultiViews
-  <IfModule mod_dav.c>
-    Dav off
-  </IfModule>
-</Directory>
+<VirtualHost *:443\>
+  ServerName lsidrive.superindo.co.id
+  DocumentRoot /var/www/html/nextcloud
+  SSLCertificateFile /etc/apache2/certs/cert.pem	<!-- ADJUST TO YOUR ACTUAL PATH -->
+  SSLCertificateKeyFile /etc/apache2/certs/privkey.pem	<!-- ADJUST TO YOUR ACTUAL PATH -->
+  SSLCertificateChainFile /etc/apache2/certs/chain.pem	<!-- ADJUST TO YOUR ACTUAL PATH -->
+  <Directory /var/www/html/nextcloud/>
+    Require all granted
+    AllowOverride All
+    Options FollowSymLinks MultiViews
+    SetEnv HOME /var/www/html/nextcloud
+    SetEnv HTTP_HOME /var/www/html/nextcloud
+    <IfModule mod_dav.c>
+      Dav off
+    </IfModule>
+  </Directory>
+</VirtualHost>
 
 <Directory /var/www/html>
     Options -Indexes
