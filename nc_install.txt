@@ -123,18 +123,39 @@ sudo nano /etc/apache2/sites-available/nextcloud.conf
 #Alias / "/var/www/html/nextcloud/"
 <Directory /var/www/html/nextcloud/>
   Require all granted
-  AllowOverride All
+  AllowOverride none
   Options FollowSymLinks MultiViews
   <IfModule mod_dav.c>
     Dav off
   </IfModule>
 </Directory>
-
+<VirtualHost *:80>
+   ServerName lsidrive.superindo.co.id
+   Redirect permanent / https://lsidrive.superindo.co.id/
+</VirtualHost>
+<VirtualHost *:443>
+  ServerName lsidrive.superindo.co.id
+  DocumentRoot /var/www/html/nextcloud
+  SSLCertificateFile /etc/ssl/certs/www_superindo_co_id.crt
+  SSLCertificateKeyFile /etc/ssl/certs/superindo.co.id.key
+  SSLCertificateChainFile /etc/ssl/certs/CABundle.crt
+  <Directory /var/www/html/nextcloud/>
+    Require all granted
+    AllowOverride All
+    Options FollowSymLinks MultiViews
+    SetEnv HOME /var/www/html/nextcloud
+    SetEnv HTTP_HOME /var/www/html/nextcloud
+    <IfModule mod_dav.c>
+      Dav off
+    </IfModule>
+  </Directory>
 <Directory /var/www/html>
-    Options -Indexes
+ Options -Indexes
 </Directory>
+</VirtualHost>
 
 SAVE
+
 sudo a2ensite nextcloud <!--ENABLE NEXTCLOUD.CONF configuration -->
 sudo systemctl restart apache2
 
